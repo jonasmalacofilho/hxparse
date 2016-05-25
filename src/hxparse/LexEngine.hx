@@ -330,11 +330,23 @@ class LexEngine {
 		return out;
 	}
 
+	static function decimal(c : Int) : Int {
+		return if (c <= "9".code)
+			c - "0".code;
+		else if (c <= "F".code)
+			c + 10 - "A".code;
+		else
+			c + 10 - "a".code;
+	}
+
 	static function parseInner( pattern : byte.ByteData, i : Int = 0, pDepth : Int = 0 ) : { pattern: Pattern, pos: Int } {
 		function readChar() {
 			var c = pattern.readByte(i++);
-			if ( StringTools.isEof(c) ) c = '\\'.code;
-			else if (c >= "0".code && c <= "9".code) {
+			if ( StringTools.isEof(c) ) {
+				c = '\\'.code;
+			} else if (c == "x".code) {
+				c = (decimal(pattern.readByte(i++)) << 4) | decimal(pattern.readByte(i++));
+			} else if (c >= "0".code && c <= "9".code) {
 				var v = c - 48;
 				while(true) {
 					var cNext = pattern.readByte(i);
